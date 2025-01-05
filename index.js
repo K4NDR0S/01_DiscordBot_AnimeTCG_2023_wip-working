@@ -182,13 +182,14 @@ client.on('messageCreate', async (msg) => {
 
 
 
-  /*// Check if the received command is an alias, and replace it with the actual command
+  // TEST 
+  // Check if the received command is an alias, and replace it with the actual command
   for (const [actualCommand, aliasList] of Object.entries(aliases)) {
     if (aliasList.includes(command)) {
       msg.content = actualCommand;
       break;
     }
-  }*/
+  }
 
   if (msg.content === 'ping') {
     msg.channel.send('pong');
@@ -228,18 +229,6 @@ client.on('messageCreate', async (msg) => {
       const cardPrint = cardCounts[cardName];
       const cardCode = await generateUniqueCode();
     
-      /*const textBgHeight = 60;
-      ctx.fillStyle = 'white';
-      ctx.fillRect(x, y + height, width, textBgHeight);
-      ctx.font = '40px Arial';
-      ctx.fillStyle = 'black';
-      const textWidth = ctx.measureText(`${cardName} #${cardPrint}, ~${cardCode}`).width;
-      ctx.fillText(
-        `${cardName} #${cardPrint}  ~${cardCode}`,
-        x + (width - textWidth) / 2,
-        y + height + textBgHeight / 2 + 10
-      );*/
-    
       // Load baseElement from the imageUrls.json file
       const imageUrls = JSON.parse(fs.readFileSync('imageUrls.json', 'utf8'));
       const baseElement = imageUrls.find(img => img.name === cardName)?.baseElement || 'defaultBaseElement';
@@ -273,55 +262,12 @@ client.on('messageCreate', async (msg) => {
     
 
       const element = getRandomElementWithChances(elements, [9.5,9.5,9.5,9.5,9.5,9.5,5,9.5,9.5,9.5,9.5]); // Added
-      //console.log('Element before getEmojiForElement:', element);
-      //console.log('getEmojiForElement(element):', getEmojiForElement(element));
+      
       cardsData.push({ ...cardData, element });
-      //console.log('Element before getEmojiForElement:', element); // Added
-      //console.log('getEmojiForElement(element):', getEmojiForElement(element)); // Added
-
-      //console.log('Latest prints before update:', latestPrints);
-       // Update the latest print for this card in the database
-       //if(checkPrintExists(selectedImages[i].name==false)){
-       //addCardInfoToDatabase(selectedImages[i].name,cardData.cardPrint)
-       //}else{
-       //updateLatestPrintInDatabase(selectedImages[i].name, cardData.cardPrint);
        updateLatestPrintInDatabase(selectedImages[i].name, cardData.cardPrint);
-       //console.log(selectedImages[i].name);
-       //console.log(cardData.cardPrint);
-       //}
     }
 
     const buffer = canvas.toBuffer();
-
-    /*const reply = await msg.reply({
-      content: `Summoning 3 cards:`,
-      files: [buffer],
-      components: [
-        {
-          type: 1,
-          components: [
-            {
-              type: 2,
-              style: 1,
-              label: '1',
-              custom_id: '1',
-            },
-            {
-              type: 2,
-              style: 1,
-              label: '2',
-              custom_id: '2',
-            },
-            {
-              type: 2,
-              style: 1,
-              label: '3',
-              custom_id: '3',
-            },
-          ],
-        },
-      ],
-    });*/
 
     const cardBuffers = []; // Array to store image buffers for each card
 
@@ -473,28 +419,17 @@ connection.query(getClassEmojiQuery, getClassEmojiValues, async (classErr, class
     const className = classResults.length > 0 ? classResults[0].class : 'N/A';
     const classEmoji = classEmojis[className] || classEmojis['N/A'];
 
-    /*await interaction.channel.send(
-      `🔔 <@${interaction.user.id}> **New Card Added to Your Inventory!** 🔔\n\n` +
-      ` **Card:** "${cardName}" **#${cardPrint}**\n` +
-      ` **Code:** \`${cardCode}\`\n` +
-      ` **Series:** ${series}\n` +
-      ` **Element:** ${element}\n` +
-      ` **Base Element:** ${cardData.baseElement}\n` +
-      ` **Class:** ${classEmoji} ${className}`
-    );*/
-    const { MessageEmbed } = require('discord.js');
-
-const embed = new EmbedBuilder()
-  .setColor('#3498db') // kolor embedu
-  .setTitle('🔔 New Card Added to Your Inventory! 🔔')
+    const embed = new EmbedBuilder()
+  .setColor('#3498db') // embed color
+  .setTitle('🎉 You Have a New Card! 🎉')
   .setDescription(
-    `<@${interaction.user.id}> "${cardName}" #${cardPrint} \`${cardCode}\` ` +
-    `from \`${series}\`, Element: ${element}, Base Element: ${cardData.baseElement}, ` +
-    `Class: ${classEmoji} ${className}`
-  )
-  //.setFooter('CardBot', 'https://example.com/icon.png') // opcjonalny footer z ikoną bota
-  //.setTimestamp(); // dodaje datę i czas
+    `<@${interaction.user.id}>, check out your new card:\n\n` +
+    `**"${cardName}"** #${cardPrint} \`${cardCode}\`\n` +
+    `**From**: \`${series}\`\n` +
+    `**Class**: ${classEmoji} ${className}`
+  );
 
+  
 await interaction.channel.send({ embeds: [embed] });
 
   }
@@ -3374,7 +3309,7 @@ function processAndAddCardData(filePath) {
     const cards = JSON.parse(data);
 
     cards.forEach(card => {
-      const { name, baseElement, description = null } = card;
+      const { name, baseElement, class: cardClass, description = null } = card; // Use null if description is not provided
       const latestPrint = 0; // Assuming latestPrint is always 0 as per your example
 
       // Check if the card already exists
@@ -3387,12 +3322,12 @@ function processAndAddCardData(filePath) {
 
         if (results[0].count === 0) {
           // Card does not exist, so insert it
-          const insertQuery = 'INSERT INTO card_info (card_name, latest_print, base_element) VALUES (?, ?, ?)';
-          const values = [name, latestPrint, baseElement];
+          const insertQuery = 'INSERT INTO card_info (card_name, latest_print, base_element, class, description) VALUES (?, ?, ?, ?, ?)';
+          const values = [name, latestPrint, baseElement, cardClass, description];
 
           connection.query(insertQuery, values, (err, results) => {
             if (err) {
-              //console.error('Error adding card info to database:', err.message);
+              console.error('Error adding card info to database:', err.message);
             } else {
               console.log('Card info added to database:', results);
             }
@@ -3404,6 +3339,8 @@ function processAndAddCardData(filePath) {
     });
   });
 }
+
+
 
 
 function addCardInfoToDatabase(cardName, latestPrint) {
@@ -3497,7 +3434,11 @@ async function initializeBot() {
     console.error('Error with user_data db:', error.message);
   }
 };*/
+
+  //DON'T DELETE
   //processAndAddCardData('./imageUrls.json') // working
+
+
   // Load latest prints from the database
   await loadLatestPrintsFromDatabase();
 

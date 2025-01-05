@@ -75,6 +75,13 @@
     user_id VARCHAR(255) NOT NULL,
     color VARCHAR(7) NOT NULL
     );
+
+    ALTER TABLE card_info ADD COLUMN class VARCHAR(255);
+    ALTER TABLE card_info ADD COLUMN base_element VARCHAR(255);
+    ALTER TABLE card_info ADD COLUMN description TEXT;
+
+
+
     ```
 # How To Run Project With "NODEMON"?
 
